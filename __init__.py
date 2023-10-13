@@ -47,15 +47,30 @@ def update_stroke(dummy):
         #print(bpy.context.object.type)
         stroke = bpy.context.active_object.data.layers.active.active_frame.strokes[-1]                     
 
-class SelectionEntry(PropertyGroup):
-    name: StringProperty(name="Bone Name", override={'LIBRARY_OVERRIDABLE'})
 
 #REGISTER UNREGISTER
 classes = (
     GPTOOLS_OT_arrange_depth,
-    GPTOOLS_PT_strokes,
+
+    GPTOOLS_MT_stroke_set_create,
+    GPTOOLS_MT_stroke_sets_context_menu,
+    GPTOOLS_MT_stroke_sets_select,
+    GPTOOLS_PT_stroke_sets,
+    GPTOOLS_UL_stroke_set,
     StrokeEntry,
     StrokeSet,
+    GPTOOLS_OT_stroke_set_delete_all,
+    GPTOOLS_OT_stroke_set_remove_strokes,
+    GPTOOLS_OT_stroke_set_move,
+    GPTOOLS_OT_stroke_set_add,
+    GPTOOLS_OT_stroke_set_remove,
+    GPTOOLS_OT_stroke_set_assign,
+    GPTOOLS_OT_stroke_set_unassign,
+    GPTOOLS_OT_stroke_set_select,
+    GPTOOLS_OT_stroke_set_deselect,
+    GPTOOLS_OT_stroke_set_add_and_assign,
+    GPTOOLS_OT_stroke_set_copy,
+    GPTOOLS_OT_stroke_set_paste,
     )
 
 def register():
