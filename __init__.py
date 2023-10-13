@@ -29,19 +29,33 @@ bl_info = {
 }
 
 from . operators import *
+from . stroke_sets import *
+
+from bpy.props import (
+    StringProperty,
+    IntProperty,
+    EnumProperty,
+    BoolProperty,
+    CollectionProperty,
+)
+
 from bpy.app.handlers import persistent
 
 @persistent
 def update_stroke(dummy):    
     if bpy.context.mode in {'PAINT_GPENCIL'}:
-        stroke = bpy.context.active_object.data.layers.active.active_frame.strokes[-1]       
+        #print(bpy.context.object.type)
+        stroke = bpy.context.active_object.data.layers.active.active_frame.strokes[-1]                     
 
-            
-                
+class SelectionEntry(PropertyGroup):
+    name: StringProperty(name="Bone Name", override={'LIBRARY_OVERRIDABLE'})
 
 #REGISTER UNREGISTER
 classes = (
     GPTOOLS_OT_arrange_depth,
+    GPTOOLS_PT_strokes,
+    StrokeEntry,
+    StrokeSet,
     )
 
 def register():
@@ -50,12 +64,30 @@ def register():
     for cls in classes:
         register_class(cls)
 
+        # Add properties.
+    bpy.types.GreasePencil.stroke_sets = CollectionProperty(
+        type=StrokeSet,
+        name="Stroke Sets",
+        description="List of groups of strokes for easy selection",
+        override={'LIBRARY_OVERRIDABLE', 'USE_INSERTION'}
+    )
+    bpy.types.GreasePencil.active_stroke_set = IntProperty(
+        name="Active Stroke Set",
+        description="Index of the currently active stroke set",
+        default=0,
+        override={'LIBRARY_OVERRIDABLE'}
+    )
+
     bpy.app.handlers.depsgraph_update_post.append(update_stroke)
 
 def unregister():
     from bpy.utils import unregister_class
     for cls in reversed(classes):
         unregister_class(cls)
+
+    # Clear properties.
+    del bpy.types.GreasePencil.stroke_sets
+    del bpy.types.GreasePencil.active_stroke_set
 
     bpy.app.handlers.depsgraph_update_post.remove(update_stroke)
 
