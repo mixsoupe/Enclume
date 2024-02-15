@@ -57,7 +57,9 @@ class PIPELINE_OT_increment(bpy.types.Operator):
         versionFileName = sceneName + "_v" + f"{new_version:03}" + ".blend"
         versionPath = str(versionsFolder / versionFileName)
 
+        bpy.ops.wm.save_as_mainfile() #Save Current File
         bpy.ops.wm.save_as_mainfile( filepath = versionPath, check_existing=False, copy=True, relative_remap = True)
+        self.report({'INFO'}, "Version saved: " + versionFileName)
 
         return {'FINISHED'}
 

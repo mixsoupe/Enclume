@@ -28,15 +28,20 @@ bl_info = {
     "category" : "",
 }
 
-from .grease_pencil_tools import *
-from .pipeline import *
-from . stroke_sets import *
+
 from bpy.utils import register_class, unregister_class
 
+from .grease_pencil_tools import *
+from .pipeline import *
+from .stroke_sets import *
+from .ui import *
+
+#projects
+from .projects import aigle
 
 from bpy.app.handlers import persistent
 
-submodules = [grease_pencil_tools, pipeline]
+submodules = [grease_pencil_tools, pipeline, aigle, ui]
 
 
 @persistent
