@@ -35,16 +35,17 @@ from bpy.props import (
 )
 
 # Data Structure ##############################################################
-class StrokeEntry(PropertyGroup):
-    name: StringProperty(name="Bone Name", override={'LIBRARY_OVERRIDABLE'})
+# class StrokeEntry(PropertyGroup):
+#     name: StringProperty(name="Bone Name", override={'LIBRARY_OVERRIDABLE'})
+#     #pointer: PointerProperty(type=bpy.types.GPencilStroke)
 
 
 class StrokeSet(PropertyGroup):
-    name: StringProperty(name="Set Name", override={'LIBRARY_OVERRIDABLE'})
-    bone_ids: CollectionProperty(
-        type=StrokeEntry,
-        override={'LIBRARY_OVERRIDABLE', 'USE_INSERTION'}
-    )
+    id: IntProperty(name="id", override={'LIBRARY_OVERRIDABLE'})
+    # stroke_ids: CollectionProperty(
+    #     type=StrokeEntry,
+    #     override={'LIBRARY_OVERRIDABLE', 'USE_INSERTION'}
+    # )
     is_selected: BoolProperty(name="Is Selected", override={'LIBRARY_OVERRIDABLE'})
 
 class GPTOOLS_MT_stroke_sets_context_menu(Menu):
@@ -186,9 +187,9 @@ class GPTOOLS_OT_stroke_set_remove_strokes(PluginOperator):
         # iterate only the selected bones in current pose that are not hidden
         for bone in context.selected_pose_bones:
             for selset in gp.stroke_sets:
-                if bone.name in selset.bone_ids:
-                    idx = selset.bone_ids.find(bone.name)
-                    selset.bone_ids.remove(idx)
+                if bone.name in selset.stroke_ids:
+                    idx = selset.stroke_ids.find(bone.name)
+                    selset.stroke_ids.remove(idx)
 
         return {'FINISHED'}
 
@@ -233,7 +234,7 @@ class GPTOOLS_OT_stroke_set_move(NeedSelSetPluginOperator):
 
 
 class GPTOOLS_OT_stroke_set_add(PluginOperator):
-    bl_idname = "pose.stroke_set_add"
+    bl_idname = "gptools.stroke_set_add"
     bl_label = "Create Stroke Set"
     bl_description = "Creates a new empty Stroke Set"
     bl_options = {'UNDO', 'REGISTER'}
@@ -291,10 +292,19 @@ class GPTOOLS_OT_stroke_set_assign(PluginOperator):
         act_sel_set = gp.stroke_sets[gp.active_stroke_set]
 
         # iterate only the selected bones in current pose that are not hidden
-        for bone in context.selected_pose_bones:
-            if bone.name not in act_sel_set.bone_ids:
-                bone_id = act_sel_set.bone_ids.add()
-                bone_id.name = bone.name
+
+        strokes = bpy.context.editable_gpencil_strokes
+
+        for stroke in strokes:          
+            if stroke.select:
+                if stroke not in act_sel_set.stroke_ids:
+                    stroke_id = act_sel_set.stroke_ids.add()
+                    stroke_id.pointer = stroke
+        
+        # for bone in context.selected_pose_bones:
+        #     if bone.name not in act_sel_set.stroke_ids:
+        #         bone_id = act_sel_set.stroke_ids.add()
+        #         bone_id.name = bone.name
 
         return {'FINISHED'}
 
@@ -311,9 +321,9 @@ class GPTOOLS_OT_stroke_set_unassign(NeedSelSetPluginOperator):
 
         # iterate only the selected bones in current pose that are not hidden
         for bone in context.selected_pose_bones:
-            if bone.name in act_sel_set.bone_ids:
-                idx = act_sel_set.bone_ids.find(bone.name)
-                act_sel_set.bone_ids.remove(idx)
+            if bone.name in act_sel_set.stroke_ids:
+                idx = act_sel_set.stroke_ids.find(bone.name)
+                act_sel_set.stroke_ids.remove(idx)
 
         return {'FINISHED'}
 
@@ -341,7 +351,7 @@ class GPTOOLS_OT_stroke_set_select(NeedSelSetPluginOperator):
         sel_set = gp.stroke_sets[idx]
 
         for bone in context.visible_pose_bones:
-            if bone.name in sel_set.bone_ids:
+            if bone.name in sel_set.stroke_ids:
                 bone.bone.select = True
 
         return {'FINISHED'}
@@ -358,7 +368,7 @@ class GPTOOLS_OT_stroke_set_deselect(NeedSelSetPluginOperator):
         act_sel_set = gp.stroke_sets[gp.active_stroke_set]
 
         for bone in context.selected_pose_bones:
-            if bone.name in act_sel_set.bone_ids:
+            if bone.name in act_sel_set.stroke_ids:
                 bone.bone.select = False
 
         return {'FINISHED'}
@@ -426,7 +436,7 @@ def to_json(context) -> str:
     json_obj = {}
     for idx, sel_set in enumerate(context.object.data.stroke_sets):
         if idx == active_idx or sel_set.is_selected:
-            bones = [bone_id.name for bone_id in sel_set.bone_ids]
+            bones = [bone_id.name for bone_id in sel_set.stroke_ids]
             json_obj[sel_set.name] = bones
 
     return json.dumps(json_obj)
@@ -443,7 +453,7 @@ def from_json(context, as_json: str):
         new_sel_set = gp_sel_sets.add()
         new_sel_set.name = uniqify(name, gp_sel_sets.keys())
         for bone_name in bones:
-            bone_id = new_sel_set.bone_ids.add()
+            bone_id = new_sel_set.stroke_ids.add()
             bone_id.name = bone_name
 
 
@@ -487,3 +497,62 @@ def uniqify(name: str, other_names: list) -> str:
             break
         min_index = num + 1
     return "{}.{:03d}".format(name, min_index)
+
+
+classes = (
+    GPTOOLS_MT_stroke_set_create,
+    GPTOOLS_MT_stroke_sets_context_menu,
+    GPTOOLS_MT_stroke_sets_select,
+    GPTOOLS_PT_stroke_sets,
+    GPTOOLS_UL_stroke_set,
+    #StrokeEntry,
+    StrokeSet,
+    GPTOOLS_OT_stroke_set_delete_all,
+    GPTOOLS_OT_stroke_set_remove_strokes,
+    GPTOOLS_OT_stroke_set_move,
+    GPTOOLS_OT_stroke_set_add,
+    GPTOOLS_OT_stroke_set_remove,
+    GPTOOLS_OT_stroke_set_assign,
+    GPTOOLS_OT_stroke_set_unassign,
+    GPTOOLS_OT_stroke_set_select,
+    GPTOOLS_OT_stroke_set_deselect,
+    GPTOOLS_OT_stroke_set_add_and_assign,
+    GPTOOLS_OT_stroke_set_copy,
+    GPTOOLS_OT_stroke_set_paste,
+    )
+
+def register():
+    from bpy.utils import register_class
+    for cls in classes:
+        register_class(cls)
+
+    #Add properties.
+    bpy.types.GreasePencil.stroke_sets = CollectionProperty(
+        type=StrokeSet,
+        name="Stroke Sets",
+        description="List of groups of strokes for easy selection",
+        override={'LIBRARY_OVERRIDABLE', 'USE_INSERTION'}
+    )
+    bpy.types.GreasePencil.active_stroke_set = IntProperty(
+        name="Active Stroke Set",
+        description="Index of the currently active stroke set",
+        default=0,
+        override={'LIBRARY_OVERRIDABLE'}
+    )
+    bpy.types.GPencilStrokes.stroke_set_id = IntProperty(
+        name="Stroke Set ID",
+        description="Index of the stroke set",
+        default=0,
+        override={'LIBRARY_OVERRIDABLE'}
+    )
+
+
+def unregister():
+    from bpy.utils import unregister_class
+    for cls in reversed(classes):
+        unregister_class(cls)
+
+    # Clear properties.
+    del bpy.types.GreasePencil.stroke_sets
+    del bpy.types.GreasePencil.active_stroke_set
+    del bpy.types.GPencilStroke.stroke_set_id
