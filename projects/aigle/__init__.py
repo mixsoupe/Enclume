@@ -20,56 +20,53 @@
 import bpy
 from bpy.utils import register_class, unregister_class
 from pathlib import Path
-from .ui import *
+import os.path
+from .ui_aigle import *
+from ... import utils
 
 
-class AIGLE_OT_aigle_anim_file(bpy.types.Operator):    
-    bl_idname = "aigle.anim_file"
-    bl_label = "Make Animation file"
-    bl_description = "Make animation file from current file"
-    
+class AIGLE_OT_aigle_new_file(bpy.types.Operator):    
+    bl_idname = "aigle.new_file"
+    bl_label = "Make New File"
+    bl_description = "Make new file from current file"
+
+    thisTask: bpy.props.StringProperty (default='THIS')       
+    newTask: bpy.props.StringProperty (default='NEW')
+
     def execute(self, context):
         # Folder process
         currentFile = Path(bpy.data.filepath)
-        sceneName = currentFile.stem
-        currentFolder  = currentFile.parent
-        versionsFolder = currentFolder / '_versions'
+        rootFolder = currentFile.parents[3]
+        taskFolder = currentFile.parents[2]
 
-        print (currentFolder)
-        # #Check if file is saved
-        # if sceneName == '':
-        #     #asks the user to save as
-        #     self.report({'ERROR'}, "Not Saved! Save this scene first using the \"save as\" command [CTRL + SHIFT + S]")
-        #     return {'CANCELLED'}    
+        #Check Current File
+        if taskFolder.stem != self.thisTask:
+            self.report({'ERROR'}, "This file is not a valid {} task".format(self.thisTask))
+            return {'CANCELLED'}
         
-        # # Version get
-        # if not versionsFolder.exists():
-        #     versionsFolder.mkdir()
-        # versions = [0,]
-        # for f in versionsFolder.iterdir():
-        #     if f.is_file() and f.stem.startswith(sceneName):
-        #         versionName = f.stem
-        #         versionString = versionName.replace(sceneName, '')
-        #         versionString = versionString.replace('_v','')
-        #         if versionString.isdecimal():                    
-        #             versions.append(int(versionString)) 
-        # last_version = max(versions)
+        newFile = str(currentFile).replace(str(rootFolder), "")
+        newFile = newFile.replace(self.thisTask, self.newTask)
+        newFile = str(rootFolder) +newFile
         
-        # # Version save
-        # new_version = last_version + 1
-        # versionFileName = sceneName + "_v" + f"{new_version:03}" + ".blend"
-        # versionPath = str(versionsFolder / versionFileName)
+        if os.path.exists(newFile):
+            self.report({'ERROR'}, "{} file already exist".format(self.newTask))
+            return {'CANCELLED'}
+        
+        #Create folder
+        animFolder = Path(newFile).parent
+        if not os.path.exists(animFolder): 
+            os.makedirs(animFolder)
 
-        # bpy.ops.wm.save_as_mainfile() #Save Current File
-        # bpy.ops.wm.save_as_mainfile( filepath = versionPath, check_existing=False, copy=True, relative_remap = True)
-        # self.report({'INFO'}, "Version saved: " + versionFileName)
+        #Save file
+        bpy.ops.wm.save_as_mainfile( filepath = newFile, check_existing=True, relative_remap = True)
 
+        self.report({'ERROR'}, "{} created".format(self.newTask))
         return {'FINISHED'}
 
 
 #REGISTER
 classes = (
-    AIGLE_OT_aigle_anim_file,
+    AIGLE_OT_aigle_new_file,
     UI_PT_view3d_enclume_aigle,
     )
 

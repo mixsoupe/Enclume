@@ -34,14 +34,14 @@ from bpy.utils import register_class, unregister_class
 from .grease_pencil_tools import *
 from .pipeline import *
 from .stroke_sets import *
-from .ui import *
+from .ui_global import *
 
 #projects
 from .projects import aigle
 
 from bpy.app.handlers import persistent
 
-submodules = [grease_pencil_tools, pipeline, aigle, ui]
+submodules = [grease_pencil_tools, pipeline, aigle, ui_global]
 
 
 @persistent

@@ -31,5 +31,10 @@ class UI_PT_view3d_enclume_aigle(bpy.types.Panel):
         layout = self.layout
         layout.use_property_split = True    
 
-        layout.operator("aigle.anim_file")
+        op = layout.operator("aigle.new_file", text = "Make Animation File")
+        op.thisTask = "LAYOUT"
+        op.newTask = "ANIM"
 
+        op = layout.operator("aigle.new_file", text = "Make Clean File")
+        op.thisTask = "ANIM"
+        op.newTask = "CLEAN"
