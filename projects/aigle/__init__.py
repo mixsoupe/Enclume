@@ -21,9 +21,6 @@ import bpy
 from bpy.utils import register_class, unregister_class
 from pathlib import Path
 import os.path
-from .ui_aigle import *
-from ... import utils
-
 
 class AIGLE_OT_aigle_new_file(bpy.types.Operator):    
     bl_idname = "aigle.new_file"
@@ -63,7 +60,37 @@ class AIGLE_OT_aigle_new_file(bpy.types.Operator):
         self.report({'ERROR'}, "{} created".format(self.newTask))
         return {'FINISHED'}
 
+#VIEW3D PANELS
+class UI_PT_view3d_enclume_aigle(bpy.types.Panel):
+    bl_label = "L'Aigle et le Roitelet"
+    bl_idname = "WORKFLOW_PT_enclume_aigle"
+    bl_space_type = "VIEW_3D"   
+    bl_region_type = "UI"
+    bl_category = "L'Enclume"
 
+    def draw(self, context):
+        layout = self.layout
+        layout.use_property_split = True
+
+        op = layout.operator("pipeline.import_audio")
+        currentFile = bpy.data.filepath
+        audioFile = currentFile.replace ("LAYOUT_S01_P08.blend", "S01_P08.wav")
+        op.audioFile = audioFile
+
+        op = layout.operator("aigle.new_file", text = "Make Animation File")
+        op.thisTask = "LAYOUT"
+        op.newTask = "ANIM"
+
+        op = layout.operator("aigle.new_file", text = "Make Clean File")
+        op.thisTask = "ANIM"
+        op.newTask = "CLEAN"
+
+        op = layout.operator("pipeline.playblast") 
+        currentFile = bpy.data.filepath
+        playblastFile = currentFile.replace (".blend", ".mp4")
+        op.playblastFile = playblastFile
+
+    
 #REGISTER
 classes = (
     AIGLE_OT_aigle_new_file,

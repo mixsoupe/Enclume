@@ -18,8 +18,10 @@
 #
 
 import bpy
+import os
 from bpy.utils import register_class, unregister_class
 from pathlib import Path
+
 
 class PIPELINE_OT_increment(bpy.types.Operator):    
     bl_idname = "pipeline.increment"
@@ -61,12 +63,130 @@ class PIPELINE_OT_increment(bpy.types.Operator):
         bpy.ops.wm.save_as_mainfile( filepath = versionPath, check_existing=False, copy=True, relative_remap = True)
         self.report({'INFO'}, "Version saved: " + versionFileName)
 
-        return {'FINISHED'}
+        return {'FINISHED'}    
 
+class PIPELINE_OT_import_audio(bpy.types.Operator):    
+    bl_idname = "pipeline.import_audio"
+    bl_label = "Import Audio"
+    bl_description = "Import audio and setup scene"
+    
+    audioFile: bpy.props.StringProperty (default='')
+
+    def execute(self, context):
+        scene = bpy.context.scene
+
+        if not scene.sequence_editor:
+            scene.sequence_editor_create()
+
+        for sequence in scene.sequence_editor.sequences:
+                if sequence.type == 'SOUND':
+                    scene.sequence_editor.sequences.remove(sequence)
+        
+        #Check if file exist
+        abs_path = bpy.path.abspath(self.audioFile)
+        if not os.path.isfile(abs_path):
+            self.report({'ERROR'}, 'No audio file to import')
+            return {'CANCELLED'}
+
+        soundstrip = scene.sequence_editor.sequences.new_sound("audio", self.audioFile, 1, 1)
+
+        scene.frame_start = 1
+        scene.frame_end = soundstrip.frame_final_duration
+
+        bpy.context.scene.use_audio_scrub = True
+        bpy.context.scene.sync_mode = 'AUDIO_SYNC'
+
+        return {'FINISHED'}
+    
+class PIPELINE_OT_playblast(bpy.types.Operator):    
+    bl_idname = "pipeline.playblast"
+    bl_label = "Playblast"
+    bl_description = "Playblast"
+
+    playblastFile: bpy.props.StringProperty (default='')
+
+    def execute(self, context):
+        scene = bpy.context.scene
+
+        #Change Settings
+        scene.render.engine = "BLENDER_EEVEE"
+        scene.render.image_settings.file_format = "FFMPEG"
+        scene.render.image_settings.color_mode = "RGB"
+        scene.render.ffmpeg.format = "MPEG4"
+        scene.render.ffmpeg.codec = "H264"
+        scene.render.ffmpeg.constant_rate_factor = "HIGH"
+        scene.render.ffmpeg.ffmpeg_preset = "GOOD"
+        scene.render.ffmpeg.audio_codec = "MP3"
+
+        scene.render.film_transparent = False
+
+        scene.render.filepath = self.playblastFile
+
+        #Metadata
+        scene.render.use_stamp_date = False
+        scene.render.use_stamp_time = False
+        scene.render.use_stamp_render_time = False
+        scene.render.use_stamp_frame = True
+        scene.render.use_stamp_frame_range = False
+        scene.render.use_stamp_memory = False
+        scene.render.use_stamp_hostname = False
+        scene.render.use_stamp_camera = False
+        scene.render.use_stamp_lens = False
+        scene.render.use_stamp_scene = False
+        scene.render.use_stamp_marker = False
+        scene.render.use_stamp_filename = False
+        scene.render.use_stamp_note = True
+        scene.render.use_stamp = True
+
+        #Render
+        # Check range
+        sound_count = 0
+        for sequence in scene.sequence_editor.sequences:            
+            if sequence.type == 'SOUND':
+                sound_count += 1
+        if sound_count == 1:
+            scene.frame_start = 1
+            scene.frame_end = sequence.frame_final_duration
+
+        #settings = {}
+        for screen in bpy.data.screens:
+            for area in screen.areas:
+                    if area.type == 'VIEW_3D':
+                        for space in area.spaces:
+                            if space.type == 'VIEW_3D':
+                                # space_settings = {"overlays" : space.overlay.show_overlays,
+                                #                   "shading.type" : space.shading.type
+                                #                   }
+                                # settings[space] = space_settings
+                                space.overlay.show_overlays = False    
+                                space.shading.type = 'MATERIAL'                                
+
+        bpy.context.space_data.region_3d.view_perspective = 'CAMERA'
+
+
+
+        filename =  bpy.path.basename(self.playblastFile)
+        filename = filename.rsplit(".", 1)[0]        
+        scene.render.stamp_note_text = filename
+
+        bpy.ops.render.opengl('INVOKE_DEFAULT', animation = True)     
+        
+        # #Restore Settings
+        # for space in settings.keys():
+        #     space.overlay.show_overlays = settings[space]["overlays"]
+        #     space.shading.type = settings[space]["shading.type"]
+
+        #Open Folder
+        folder = os.path.dirname(self.playblastFile)
+        os.startfile(folder)
+
+        return {'FINISHED'}
 
 #REGISTER
 classes = (
     PIPELINE_OT_increment,
+    PIPELINE_OT_import_audio,
+    PIPELINE_OT_playblast,
     )
 
 def register():    
