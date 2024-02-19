@@ -90,7 +90,7 @@ class UI_PT_view3d_enclume_aigle(bpy.types.Panel):
 
         op = layout.operator("pipeline.import_audio")
         currentFile = bpy.data.filepath        
-        folder = os.path.dirname(currentFile)
+        folder = os.path.dirname(currentFile.replace("ANIM", "LAYOUT").replace("CLEAN", "LAYOUT"))
         shortName = currentFile[-13:][:7] + ".wav"
         op.audioFile = os.path.join(folder, shortName)
 
