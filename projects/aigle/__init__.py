@@ -31,6 +31,10 @@ class AIGLE_OT_aigle_new_file(bpy.types.Operator):
     newTask: bpy.props.StringProperty (default='NEW')
 
     def execute(self, context):
+        if not bpy.data.is_saved:
+            self.report({'ERROR'}, 'File not saved!')
+            return {'CANCELLED'}
+        
         # Folder process
         currentFile = Path(bpy.data.filepath)
         rootFolder = currentFile.parents[3]
@@ -88,6 +92,7 @@ class UI_PT_view3d_enclume_aigle(bpy.types.Panel):
         layout = self.layout
         layout.use_property_split = True
 
+        #Get audio from layout folder
         op = layout.operator("pipeline.import_audio")
         currentFile = bpy.data.filepath        
         folder = os.path.dirname(currentFile.replace("ANIM", "LAYOUT").replace("CLEAN", "LAYOUT"))
@@ -104,6 +109,7 @@ class UI_PT_view3d_enclume_aigle(bpy.types.Panel):
         op.thisTask = "ANIM"
         op.newTask = "CLEAN"
 
+        #Playblast in current folder
         op = layout.operator("pipeline.playblast") 
         currentFile = bpy.data.filepath
         op.playblastFile = currentFile.replace (".blend", ".mp4")

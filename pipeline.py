@@ -36,9 +36,8 @@ class PIPELINE_OT_increment(bpy.types.Operator):
         versionsFolder = currentFolder / '_versions'
 
         #Check if file is saved
-        if sceneName == '':
-            #asks the user to save as
-            self.report({'ERROR'}, "Not Saved! Save this scene first using the \"save as\" command [CTRL + SHIFT + S]")
+        if not bpy.data.is_saved:
+            self.report({'ERROR'}, 'File not saved!')
             return {'CANCELLED'}    
         
         # Version get
@@ -106,6 +105,10 @@ class PIPELINE_OT_playblast(bpy.types.Operator):
     playblastFile: bpy.props.StringProperty (default='')
 
     def execute(self, context):
+        if not bpy.data.is_saved:
+            self.report({'ERROR'}, 'File not saved!')
+            return {'CANCELLED'}
+        
         scene = bpy.context.scene
 
         #Change Settings
