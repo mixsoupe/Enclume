@@ -59,6 +59,22 @@ class AIGLE_OT_aigle_new_file(bpy.types.Operator):
 
         self.report({'ERROR'}, "{} created".format(self.newTask))
         return {'FINISHED'}
+    
+class AIGLE_OT_aigle_setup_gpencil(bpy.types.Operator):    
+    bl_idname = "aigle.setup_gpencil"
+    bl_label = "Grease Pencil Setup"
+    bl_description = "Use Lights OFF, Autolock Layers ON"
+
+
+    def execute(self, context):
+        for obj in bpy.data.objects:
+            if obj.type == "GPENCIL":
+                obj.data.use_autolock_layers = True
+                for layer in obj.data.layers:
+                    layer.use_lights = False                    
+
+
+        return {'FINISHED'}
 
 #VIEW3D PANELS
 class UI_PT_view3d_enclume_aigle(bpy.types.Panel):
@@ -73,9 +89,12 @@ class UI_PT_view3d_enclume_aigle(bpy.types.Panel):
         layout.use_property_split = True
 
         op = layout.operator("pipeline.import_audio")
-        currentFile = bpy.data.filepath
-        audioFile = currentFile.replace ("LAYOUT_S01_P08.blend", "S01_P08.wav")
-        op.audioFile = audioFile
+        currentFile = bpy.data.filepath        
+        folder = os.path.dirname(currentFile)
+        shortName = currentFile[-13:][:7] + ".wav"
+        op.audioFile = os.path.join(folder, shortName)
+
+        layout.operator("aigle.setup_gpencil")
 
         op = layout.operator("aigle.new_file", text = "Make Animation File")
         op.thisTask = "LAYOUT"
@@ -87,13 +106,13 @@ class UI_PT_view3d_enclume_aigle(bpy.types.Panel):
 
         op = layout.operator("pipeline.playblast") 
         currentFile = bpy.data.filepath
-        playblastFile = currentFile.replace (".blend", ".mp4")
-        op.playblastFile = playblastFile
+        op.playblastFile = currentFile.replace (".blend", ".mp4")
 
     
 #REGISTER
 classes = (
     AIGLE_OT_aigle_new_file,
+    AIGLE_OT_aigle_setup_gpencil,
     UI_PT_view3d_enclume_aigle,
     )
 
