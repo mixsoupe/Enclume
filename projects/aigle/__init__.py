@@ -94,10 +94,10 @@ class UI_PT_view3d_enclume_aigle(bpy.types.Panel):
 
         #Get audio from layout folder
         op = layout.operator("pipeline.import_audio")
-        currentFile = bpy.data.filepath        
-        folder = os.path.dirname(currentFile.replace("ANIM", "LAYOUT").replace("CLEAN", "LAYOUT"))
+        currentFile = bpy.data.filepath 
+        folder1 = Path(currentFile).parent.parent.parent.parent
         shortName = currentFile[-13:][:7] + ".wav"
-        op.audioFile = os.path.join(folder, shortName)
+        op.audioFile1 = os.path.join(folder1, "SOUND" ,shortName)
 
         layout.operator("aigle.setup_gpencil")
 

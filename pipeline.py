@@ -68,8 +68,10 @@ class PIPELINE_OT_import_audio(bpy.types.Operator):
     bl_idname = "pipeline.import_audio"
     bl_label = "Import Audio"
     bl_description = "Import audio and setup scene"
+    bl_options = {"REGISTER", "UNDO"}    
     
-    audioFile: bpy.props.StringProperty (default='')
+    audioFile1: bpy.props.StringProperty (default='')
+    audioFile2: bpy.props.StringProperty (default='')
 
     def execute(self, context):
         scene = bpy.context.scene
@@ -82,12 +84,18 @@ class PIPELINE_OT_import_audio(bpy.types.Operator):
                     scene.sequence_editor.sequences.remove(sequence)
         
         #Check if file exist
-        abs_path = bpy.path.abspath(self.audioFile)
-        if not os.path.isfile(abs_path):
-            self.report({'ERROR'}, 'No audio file to import')
-            return {'CANCELLED'}
+        abs_path1 = bpy.path.abspath(self.audioFile1)
+        abs_path2 = bpy.path.abspath(self.audioFile2)
 
-        soundstrip = scene.sequence_editor.sequences.new_sound("audio", self.audioFile, 1, 1)
+        audioToImport = self.audioFile1
+
+        if not os.path.isfile(abs_path1):
+            audioToImport = self.audioFile2
+            if not os.path.isfile(abs_path2):
+                self.report({'ERROR'}, 'No audio file to import')
+                return {'CANCELLED'}
+
+        soundstrip = scene.sequence_editor.sequences.new_sound("audio", audioToImport, 1, 1)
 
         scene.frame_start = 1
         scene.frame_end = soundstrip.frame_final_duration

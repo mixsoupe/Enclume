@@ -157,6 +157,9 @@ def get_depth(stroke, pov):
 
     return distance_average
 
+
+##CONVERTER
+
 #REGISTER
 classes = (
     GPTOOLS_OT_arrange_depth,
