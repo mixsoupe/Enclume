@@ -19,6 +19,7 @@
 
 import bpy
 import os
+import json
 from bpy.utils import register_class, unregister_class
 from pathlib import Path
 
@@ -193,11 +194,86 @@ class PIPELINE_OT_playblast(bpy.types.Operator):
 
         return {'FINISHED'}
 
+
+
+def enum_tasks(self, context):
+    _enum_tasks = []
+    
+    with open(self.project_settings, 'r') as f:
+        data = json.load(f)
+    for task in data["task"]:
+        _enum_tasks.append((task, task, ""))
+
+    return _enum_tasks
+
+def enum_shots(self, context):
+    _enum_shots = []
+    
+    with open(self.project_settings, 'r') as f:
+        data = json.load(f)
+    for shot in data["shots"]:
+        _enum_shots.append((shot, shot, ""))
+
+    return _enum_shots
+
+class PIPELINE_OT_open(bpy.types.Operator):    
+    bl_idname = "pipeline.open"
+    bl_label = "Open File"
+    bl_description = "Open File"
+
+    project_settings: bpy.props.StringProperty (default='', subtype="FILE_PATH")
+    
+    # def enum_tasks(self, context):
+    #     _enum_tasks = []
+    #     _enum_tasks.clear()
+    #     _enum_tasks.append(("Layout", "Layout", ""))
+    #     _enum_tasks.append(("Clean", "Clean", ""))
+
+    #     return _enum_tasks   
+    
+    task: bpy.props.EnumProperty(
+        name="Task",
+        default=0,
+        items = lambda self, context: enum_tasks(self, context),
+        )
+    
+    shot: bpy.props.EnumProperty(
+        name="Shot",
+        default=0,
+        items = lambda self, context: enum_shots(self, context),
+        )
+    
+    def execute(self, context):
+        with open(self.project_settings, 'r') as f:
+            data = json.load(f)
+        
+        #TODO : Ce serait bien de renseigner le style de structure dans le fichier project settings
+        task_sequence = self.task + "_" + self.shot.split("_")[0]
+        task_shot = self.task + "_" + self.shot
+        task_file = self.task + "_" + self.shot + ".blend"
+
+        filepath = os.path.join(data["path"], self.task, task_sequence, task_shot, task_file)
+        
+        if not os.path.isfile(filepath) :
+            self.report({'ERROR'}, "File doesn't exist!")
+            return {'CANCELLED'}
+        
+        bpy.ops.wm.open_mainfile(filepath=filepath)        
+
+        return {'FINISHED'}
+    
+    def invoke(self, context, event):
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self)
+
+
+
 #REGISTER
 classes = (
     PIPELINE_OT_increment,
     PIPELINE_OT_import_audio,
     PIPELINE_OT_playblast,
+    PIPELINE_OT_open,
     )
 
 def register():    

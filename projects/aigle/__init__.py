@@ -91,15 +91,11 @@ class UI_PT_view3d_enclume_aigle(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
-
-        #Get audio from layout folder
-        op = layout.operator("pipeline.import_audio")
-        currentFile = bpy.data.filepath 
-        folder1 = Path(currentFile).parent.parent.parent.parent
-        shortName = currentFile[-13:][:7] + ".wav"
-        op.audioFile1 = os.path.join(folder1, "SOUND" ,shortName)
-
-        layout.operator("aigle.setup_gpencil")
+        
+        layout.label(text = "File Manager" ) 
+        op = layout.operator("pipeline.open")
+        project_settings = "A:\\Aigle.json"
+        op.project_settings = project_settings
 
         op = layout.operator("aigle.new_file", text = "Make Animation File")
         op.thisTask = "LAYOUT"
@@ -109,7 +105,17 @@ class UI_PT_view3d_enclume_aigle(bpy.types.Panel):
         op.thisTask = "ANIM"
         op.newTask = "CLEAN"
 
-        #Playblast in current folder
+        layout.label(text = "Setup" ) 
+        op = layout.operator("pipeline.import_audio")
+        currentFile = bpy.data.filepath 
+        folder1 = Path(currentFile).parent.parent.parent.parent
+        shortName = currentFile[-13:][:7] + ".wav"
+        op.audioFile1 = os.path.join(folder1, "SOUND" ,shortName)
+
+        layout.operator("aigle.setup_gpencil")
+        layout.operator("gptools.create_materials")
+
+        layout.label(text = "Export" ) 
         op = layout.operator("pipeline.playblast") 
         currentFile = bpy.data.filepath
         op.playblastFile = currentFile.replace (".blend", ".mp4")
