@@ -133,6 +133,40 @@ class GPTOOLS_OT_push(bpy.types.Operator):
         bpy.ops.object.mode_set(mode = 'SCULPT_GPENCIL')
         bpy.ops.wm.tool_set_by_id(name="builtin_brush.Push")
         return {'FINISHED'}
+    
+
+class GPTOOLS_OT_create_materials(bpy.types.Operator):
+    
+    bl_idname = "gptools.create_materials"
+    bl_label = "Create Materials"
+    bl_description = "Create materials tool"
+
+    @classmethod
+    def poll(cls,context):  
+        obj = context.active_object
+        if obj is not None:
+            obj_type = obj.type
+            is_geometry = (obj_type in {'GPENCIL',})
+
+            return is_geometry
+    
+    def execute(self, context):
+        #C'est ici que tu peux scripter ton truc
+        
+
+        ma_liste = bpy.context.active_object.material_slots
+
+        for element in ma_liste:
+            print (element)
+
+
+        #bpy.context.active_object.material_slots[0].material.grease_pencil.show_stroke = True
+
+
+
+
+        #Jusqu'ici
+        return {'FINISHED'}
 
 
 #FUNCTIONS
@@ -167,6 +201,7 @@ classes = (
     GPTOOLS_OT_erase,
     GPTOOLS_OT_lasso,
     GPTOOLS_OT_push,
+    GPTOOLS_OT_create_materials,
     )
 
 def register():    

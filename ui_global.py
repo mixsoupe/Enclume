@@ -33,6 +33,7 @@ class UI_PT_view3d_enclume_tools(bpy.types.Panel):
         layout.use_property_split = True    
 
         layout.operator("pipeline.increment")
+        layout.operator("gptools.create_materials")
 
 #REGISTER
 classes = (

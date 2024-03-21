@@ -61,7 +61,7 @@ class AIGLE_OT_aigle_new_file(bpy.types.Operator):
         #Save file
         bpy.ops.wm.save_as_mainfile( filepath = newFile, check_existing=True, relative_remap = True)
 
-        self.report({'ERROR'}, "{} created".format(self.newTask))
+        self.report({'INFO'}, "{} created".format(self.newTask))
         return {'FINISHED'}
     
 class AIGLE_OT_aigle_setup_gpencil(bpy.types.Operator):    

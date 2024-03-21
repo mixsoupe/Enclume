@@ -22,7 +22,7 @@ bl_info = {
     "author" : "Paul",
     "description" : "",
     "blender" : (3, 6, 0),
-    "version" : (0, 0, 1),
+    "version" : (0, 0, 2),
     "location" : "View3D",
     "warning" : "",
     "category" : "",
