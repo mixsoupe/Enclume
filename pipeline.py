@@ -20,6 +20,7 @@
 import bpy
 import os
 import json
+import shutil
 from bpy.utils import register_class, unregister_class
 from pathlib import Path
 
@@ -60,7 +61,9 @@ class PIPELINE_OT_increment(bpy.types.Operator):
         versionPath = str(versionsFolder / versionFileName)
 
         #bpy.ops.wm.save_as_mainfile() #Save Current File
-        bpy.ops.wm.save_as_mainfile( filepath = versionPath, check_existing=False, copy=True, relative_remap = True)
+        # bpy.ops.wm.save_as_mainfile( filepath = versionPath, check_existing=False, copy=True, relative_remap = True)
+        shutil.copy(currentFile, versionPath)
+        
         self.report({'INFO'}, "Version saved: " + versionFileName)
 
         return {'FINISHED'}    

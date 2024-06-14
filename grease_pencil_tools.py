@@ -168,6 +168,41 @@ class GPTOOLS_OT_create_materials(bpy.types.Operator):
         #Jusqu'ici
         return {'FINISHED'}
 
+class GPTOOLS_OT_get_material(bpy.types.Operator):
+    
+    bl_idname = "gptools.get_gp_material"
+    bl_label = "Get Grease Pencil Material"
+    bl_description = "get grease pencil material from selected stroke"
+
+    @classmethod
+    def poll(cls,context):
+        context = bpy.context.mode
+        is_edit_mode = (context in {'EDIT_GPENCIL'})
+        return is_edit_mode
+    
+    def execute(self, context):
+        strokes = bpy.context.editable_gpencil_strokes
+        for stroke in strokes:
+            if stroke.select:
+                index = stroke.material_index
+                material = bpy.context.object.data.materials[index]
+                bpy.context.object.active_material_index = index
+
+                self.report({'INFO'}, "Stroke material is {}".format(material.name))
+                return {'FINISHED'}
+                
+        self.report({'WARNING'}, "No stroke selected")
+        return {'CANCELLED'}
+        
+
+        #bpy.context.active_object.material_slots[0].material.grease_pencil.show_stroke = True
+
+
+
+
+        #Jusqu'ici
+       
+    
 
 #FUNCTIONS
 def get_depth(stroke, pov):
@@ -202,6 +237,7 @@ classes = (
     GPTOOLS_OT_lasso,
     GPTOOLS_OT_push,
     GPTOOLS_OT_create_materials,
+    GPTOOLS_OT_get_material,
     )
 
 def register():    

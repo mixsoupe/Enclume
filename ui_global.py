@@ -31,8 +31,10 @@ class UI_PT_view3d_enclume_tools(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True    
-
+        
+        layout.operator("gptools.get_gp_material")
         layout.operator("pipeline.increment")
+        
 
 #REGISTER
 classes = (
