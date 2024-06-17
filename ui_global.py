@@ -34,7 +34,6 @@ class UI_PT_view3d_enclume_tools(bpy.types.Panel):
         
         layout.operator("gptools.get_gp_material")
         layout.operator("pipeline.increment")
-        
 
 #REGISTER
 classes = (

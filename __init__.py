@@ -35,14 +35,15 @@ from .grease_pencil_tools import *
 from .pipeline import *
 from .stroke_sets import *
 from .ui_global import *
+import bpy
+
 
 #projects
-from .projects import aigle
+from .projects import aigle, custom
 
 from bpy.app.handlers import persistent
 
-submodules = [grease_pencil_tools, pipeline, aigle, ui_global]
-
+submodules = [grease_pencil_tools, pipeline, aigle, custom, ui_global]
 
 @persistent
 def update_stroke(dummy):    
