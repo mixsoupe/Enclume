@@ -105,6 +105,10 @@ class UI_PT_view3d_enclume_aigle(bpy.types.Panel):
         op.thisTask = "ANIM"
         op.newTask = "CLEAN"
 
+        op = layout.operator("aigle.new_file", text = "Make Rendering File")
+        op.thisTask = "CLEAN"
+        op.newTask = "RENDERING"
+
         layout.label(text = "Setup" ) 
         op = layout.operator("pipeline.import_audio")
         currentFile = bpy.data.filepath 
