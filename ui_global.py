@@ -32,7 +32,13 @@ class UI_PT_view3d_enclume_tools(bpy.types.Panel):
         layout = self.layout
         layout.use_property_split = True    
         
+        layout.label(text = "Grease Pencil" ) 
+        row = layout.row()
+        row.prop(context.scene, "create_material_color")
+        row.operator("gptools.create_material")        
+        layout.operator("gptools.edit_color")
         layout.operator("gptools.get_gp_material")
+        layout.label(text = "Save" ) 
         layout.operator("pipeline.increment")
 
 #REGISTER

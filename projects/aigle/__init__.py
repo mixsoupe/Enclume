@@ -117,7 +117,6 @@ class UI_PT_view3d_enclume_aigle(bpy.types.Panel):
         op.audioFile1 = os.path.join(folder1, "SOUND" ,shortName)
 
         layout.operator("aigle.setup_gpencil")
-        layout.operator("gptools.create_materials")
 
         layout.label(text = "Export" ) 
         op = layout.operator("pipeline.playblast") 
