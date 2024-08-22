@@ -19,8 +19,11 @@
 
 import bpy
 from bpy.utils import register_class, unregister_class
+from bpy_extras.io_utils import ImportHelper, ExportHelper
 import numpy as np
+import json
 import colorsys
+import mathutils
 
 class GPTOOLS_OT_arrange_depth(bpy.types.Operator):
     
@@ -261,7 +264,79 @@ class GPTOOLS_OT_edit_color(bpy.types.Operator):
         self.value = 0.0
         return self.execute(context)
     
+class GPTOOLS_OT_save_materials(bpy.types.Operator, ExportHelper):
     
+    bl_idname = "gptools.save_materials"
+    bl_label = "Save Materials"
+    bl_description = "Save Materials"
+    
+    filter_glob: bpy.props.StringProperty(default='*.json', options={'HIDDEN'})#*.jpg;*.jpeg;*.png;*.tif;*.tiff;*.bmp
+    
+    filename_ext = '.json'
+
+    filepath : bpy.props.StringProperty(
+        name="File Path", 
+        description="File path used for export", 
+        maxlen= 1024)
+    
+    @classmethod
+    def poll(cls,context):
+        obj = context.active_object
+        if obj is not None:
+            obj_type = obj.type
+            is_geometry = (obj_type in {'GPENCIL',})
+
+            return is_geometry
+    
+    def execute(self, context):
+        # materials_dict = {}
+        # ob = bpy.context.active_object
+        # for slot in ob.material_slots:
+        #     props = {}
+        #     material = slot.material
+        #     materials_dict[material.name] = props[]
+
+
+        #     print (material)
+        ob = context.object
+
+        exclusions = ('bl_rna', 'rna_type')
+        # save json
+        dic = {}
+        allmat=[]
+        for mat in ob.data.materials:
+            if not mat:
+                continue
+            if not mat.is_grease_pencil:
+                continue
+            if mat in allmat:
+                continue
+            allmat.append(mat)
+            
+            dic[mat.name] = {}
+            
+            for attr in dir(mat.grease_pencil):
+                if attr.startswith('__'):
+                    continue
+                if attr in exclusions:
+                    continue
+                if mat.grease_pencil.bl_rna.properties[attr].is_readonly:#avoid readonly
+                    continue
+
+                dic[mat.name][attr] = convert_attr(getattr(mat.grease_pencil, attr))
+
+        print (dic)
+        # export
+        with open(self.filepath, 'w') as fd:
+            json.dump(dic, fd, indent='\t')
+
+        self.report({'INFO'}, f'Palette saved: {self.filepath}')#WARNING, ERROR
+        return {"FINISHED"}
+        
+
+        return {'FINISHED'}
+
+
 #FUNCTIONS
 def get_depth(stroke, pov):
     matrix = bpy.context.active_object.matrix_world 
@@ -293,6 +368,19 @@ def adjust_color(color, hue, saturation, value):
     r, g, b = colorsys.hsv_to_rgb(h, s, v)
     return (r, g, b, a)
 
+def convert_attr(Attr):
+    '''Convert given value to a Json serializable format'''
+    if isinstance(Attr, (mathutils.Vector,mathutils.Color)):
+        return Attr[:]
+    elif isinstance(Attr, mathutils.Matrix):
+        return [v[:] for v in Attr]
+    elif isinstance(Attr,bpy.types.bpy_prop_array):
+        return [Attr[i] for i in range(0,len(Attr))]
+    elif isinstance(Attr,bpy.types.Image):
+        return None
+    else:
+        return(Attr)
+
 ##CONVERTER
 
 #REGISTER
@@ -305,6 +393,7 @@ classes = (
     GPTOOLS_OT_create_material,
     GPTOOLS_OT_get_material,
     GPTOOLS_OT_edit_color,
+    GPTOOLS_OT_save_materials,
     )
 
 def register():

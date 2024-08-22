@@ -79,6 +79,61 @@ class AIGLE_OT_aigle_setup_gpencil(bpy.types.Operator):
 
 
         return {'FINISHED'}
+    
+class AIGLE_OT_aigle_setup_render(bpy.types.Operator):    
+    bl_idname = "aigle.setup_render"
+    bl_label = "Setup Render"
+    bl_description = "Setup render"
+
+
+    def execute(self, context):
+        filename =  bpy.path.basename(bpy.context.blend_data.filepath)
+        filename = filename.split(".")[0]
+        shot= filename.split("_")[-2:]
+        shot = "_".join(shot)
+
+
+        scene = bpy.context.scene
+        scene.render.film_transparent = True
+        scene.render.filepath = "//RENDER\{}_".format(shot)
+        scene.render.use_file_extension = True
+        scene.render.image_settings.file_format = "OPEN_EXR_MULTILAYER"
+        scene.render.image_settings.color_mode = "RGBA"
+        scene.render.image_settings.color_depth = "16"
+        scene.render.image_settings.exr_codec = "ZIP"
+        scene.render.use_overwrite = True
+        scene.render.use_stamp = False
+
+        
+        scene.display_settings.display_device = "sRGB"
+        scene.view_settings.view_transform = "Standard"
+
+        for viewlayer in scene.view_layers:
+            viewlayer.use_pass_z = True
+
+
+
+        
+
+        
+        print (shot)
+
+
+        self.report({'INFO'}, "Render setup done")
+        return {'FINISHED'}
+    
+
+class AIGLE_OT_aigle_setup_bg(bpy.types.Operator):    
+    bl_idname = "aigle.setup_bg"
+    bl_label = "Setup BG"
+    bl_description = "Setup BG"
+
+
+    def execute(self, context):
+        
+
+        self.report({'INFO'}, "BG setup done")
+        return {'FINISHED'}
 
 #VIEW3D PANELS
 class UI_PT_view3d_enclume_aigle(bpy.types.Panel):
@@ -117,6 +172,9 @@ class UI_PT_view3d_enclume_aigle(bpy.types.Panel):
         op.audioFile1 = os.path.join(folder1, "SOUND" ,shortName)
 
         layout.operator("aigle.setup_gpencil")
+        layout.operator("aigle.setup_bg")
+        layout.operator("aigle.setup_render")
+
 
         layout.label(text = "Export" ) 
         op = layout.operator("pipeline.playblast") 
@@ -129,6 +187,8 @@ classes = (
     AIGLE_OT_aigle_new_file,
     AIGLE_OT_aigle_setup_gpencil,
     UI_PT_view3d_enclume_aigle,
+    AIGLE_OT_aigle_setup_render,
+    AIGLE_OT_aigle_setup_bg,
     )
 
 def register():    

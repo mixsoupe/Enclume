@@ -38,6 +38,7 @@ class UI_PT_view3d_enclume_tools(bpy.types.Panel):
         row.operator("gptools.create_material")        
         layout.operator("gptools.edit_color")
         layout.operator("gptools.get_gp_material")
+        #layout.operator("gptools.save_materials")
         layout.label(text = "Save" ) 
         layout.operator("pipeline.increment")
 
