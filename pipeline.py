@@ -232,7 +232,12 @@ class PIPELINE_OT_open(bpy.types.Operator):
     #     _enum_tasks.append(("Layout", "Layout", ""))
     #     _enum_tasks.append(("Clean", "Clean", ""))
 
-    #     return _enum_tasks   
+    #     return _enum_tasks
+
+    ui: bpy.props.BoolProperty(
+        name="Load UI",
+        default=True,
+        )
     
     task: bpy.props.EnumProperty(
         name="Task",
@@ -261,7 +266,7 @@ class PIPELINE_OT_open(bpy.types.Operator):
             self.report({'ERROR'}, "File doesn't exist!")
             return {'CANCELLED'}
         
-        bpy.ops.wm.open_mainfile(filepath=filepath)        
+        bpy.ops.wm.open_mainfile(filepath=filepath,load_ui=self.ui)        
 
         return {'FINISHED'}
     

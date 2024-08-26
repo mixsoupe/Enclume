@@ -109,15 +109,7 @@ class AIGLE_OT_aigle_setup_render(bpy.types.Operator):
         scene.view_settings.view_transform = "Standard"
 
         for viewlayer in scene.view_layers:
-            viewlayer.use_pass_z = True
-
-
-
-        
-
-        
-        print (shot)
-
+            viewlayer.use_pass_z = True    
 
         self.report({'INFO'}, "Render setup done")
         return {'FINISHED'}
@@ -128,9 +120,27 @@ class AIGLE_OT_aigle_setup_bg(bpy.types.Operator):
     bl_label = "Setup BG"
     bl_description = "Setup BG"
 
+    @classmethod
+    def poll(cls,context):
+        obj = context.active_object
+        if obj is not None:
+            obj_type = obj.type
+            is_geometry = (obj_type in {'GPENCIL',})
+            
+            return is_geometry
 
-    def execute(self, context):
-        
+    def execute(self, context):      
+        bpy.ops.gp.load_brushes(filepath="A:/PREPROD/LIBRARY/PALETTES/BG.blend")
+        bpy.ops.gp.load_palette(filepath="A:/PREPROD/LIBRARY/PALETTES/bg.json")
+
+        layers = bpy.context.active_object.data.layers
+
+        new_layers = {"N1", "Traits", "Nuance", "Texture", "R", "G", "B"}
+
+        for name in new_layers:
+            layer = layers.new(name = name)
+            layer.use_lights = False
+            layer.lock_frame = True
 
         self.report({'INFO'}, "BG setup done")
         return {'FINISHED'}
