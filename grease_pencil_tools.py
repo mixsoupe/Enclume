@@ -233,6 +233,7 @@ class GPTOOLS_OT_edit_color(bpy.types.Operator):
     hue: bpy.props.FloatProperty(name="Hue", min=-180.0, max=180.0, default=0.0)
     saturation: bpy.props.FloatProperty(name="Saturation", min=-100.0, max=100.0, default=0.0)
     value: bpy.props.FloatProperty(name="Value", min=-100.0, max=100.0, default=0.0)
+    alpha: bpy.props.FloatProperty(name="Alpha", min=-100.0, max=100.0, default=0.0)
 
     @classmethod
     def poll(cls,context):
@@ -248,10 +249,10 @@ class GPTOOLS_OT_edit_color(bpy.types.Operator):
                 material = bpy.context.object.data.materials[index]
                 
                 stroke_color = material.grease_pencil.color                
-                new_stroke_color = adjust_color(stroke_color, self.hue, self.saturation, self.value)
+                new_stroke_color = adjust_color(stroke_color, self.hue, self.saturation, self.value, self.alpha)
                 
                 fill_color = material.grease_pencil.fill_color                
-                new_fill_color = adjust_color(fill_color, self.hue, self.saturation, self.value)
+                new_fill_color = adjust_color(fill_color, self.hue, self.saturation, self.value, self.alpha)
                 
                 material.grease_pencil.color = new_stroke_color
                 material.grease_pencil.fill_color = new_fill_color
@@ -359,13 +360,14 @@ def get_depth(stroke, pov):
 
     return distance_average
 
-def adjust_color(color, hue, saturation, value):
+def adjust_color(color, hue, saturation, value, alpha):
     r, g, b, a = color
     h, s, v = colorsys.rgb_to_hsv(r, g, b)
     h = (h + hue/180) % 1.0
     s = min(max(s + saturation/100, 0.0), 1.0)
     v = min(max(v + value/100, 0.0), 1.0)
     r, g, b = colorsys.hsv_to_rgb(h, s, v)
+    a = min(max(a + alpha/100, 0.0), 1.0)
     return (r, g, b, a)
 
 def convert_attr(Attr):
