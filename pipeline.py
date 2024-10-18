@@ -209,12 +209,22 @@ def enum_tasks(self, context):
 
     return _enum_tasks
 
-def enum_shots(self, context):
+def enum_sequences(self, context):
+    _enum_sequences = []
+    
+    with open(self.project_settings, 'r') as f:
+        data = json.load(f)
+    for sequence in data["sequences"]:
+        _enum_sequences.append((sequence, sequence, ""))
+
+    return _enum_sequences
+
+def enum_shots(self, sequence, context):
     _enum_shots = []
     
     with open(self.project_settings, 'r') as f:
         data = json.load(f)
-    for shot in data["shots"]:
+    for shot in data["sequences"][sequence]:
         _enum_shots.append((shot, shot, ""))
 
     return _enum_shots
@@ -245,23 +255,34 @@ class PIPELINE_OT_open(bpy.types.Operator):
         items = lambda self, context: enum_tasks(self, context),
         )
     
+    sequence: bpy.props.EnumProperty(
+        name="Sequence",
+        default=0,
+        items = lambda self, context: enum_sequences(self, context),
+        )
+    
     shot: bpy.props.EnumProperty(
         name="Shot",
         default=0,
-        items = lambda self, context: enum_shots(self, context),
+        items = lambda self, context: enum_shots(self, self.sequence, context),
         )
     
     def execute(self, context):
         with open(self.project_settings, 'r') as f:
             data = json.load(f)
-        
-        #TODO : Ce serait bien de renseigner le style de structure dans le fichier project settings
-        task_sequence = self.task + "_" + self.shot.split("_")[0]
-        task_shot = self.task + "_" + self.shot
-        task_file = self.task + "_" + self.shot + ".blend"
 
-        filepath = os.path.join(data["path"], self.task, task_sequence, task_shot, task_file)
+        # OPENER AIGLE
+        # #TODO : Ce serait bien de renseigner le style de structure dans le fichier project settings
+        # task_sequence = self.task + "_" + self.shot.split("_")[0]
+        # task_shot = self.task + "_" + self.shot
+        # task_file = self.task + "_" + self.shot + ".blend"
+
+        # filepath = os.path.join(data["path"], self.task, task_sequence, task_shot, task_file)
         
+        filename = "lgr_" + self.sequence + "_" + self.shot + "_" + self.task + "_" +"v000"+ ".blend"        
+
+        filepath = os.path.join(data["path"], "sequences", self.sequence, self.shot, self.task, filename)
+        print (filepath)
         if not os.path.isfile(filepath) :
             self.report({'ERROR'}, "File doesn't exist!")
             return {'CANCELLED'}

@@ -39,7 +39,7 @@ class UI_PT_view3d_enclume_revasion(bpy.types.Panel):
         row = layout.row()
         layout.label(text = "File Manager" ) 
         op = layout.operator("pipeline.open")
-        project_settings = "A:\\Aigle.json"
+        project_settings = "R:\enclume\Revasion.json"
         op.project_settings = project_settings
 
         row.operator("revasion.setup_scene")
