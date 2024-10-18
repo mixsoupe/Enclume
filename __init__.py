@@ -28,32 +28,61 @@ bl_info = {
     "category" : "",
 }
 
-
+import bpy
 from bpy.utils import register_class, unregister_class
 
 from .grease_pencil_tools import *
 from .pipeline import *
 from .stroke_sets import *
 from .ui_global import *
+
 import bpy
 
 
 #projects
-from .projects import aigle, custom
+from .projects import aigle, custom, revasion
 
 from bpy.app.handlers import persistent
 
-submodules = [grease_pencil_tools, pipeline, aigle, custom, ui_global]
+class ENCLUME_Preferences(bpy.types.AddonPreferences):
+    bl_idname = __package__
 
-@persistent
-def update_stroke(dummy):    
-    if bpy.context.mode in {'PAINT_GPENCIL'}:
-        #print(bpy.context.object.type)
-        stroke = bpy.context.active_object.data.layers.active.active_frame.strokes[-1]                     
+    aigle: bpy.props.BoolProperty(
+        name="L'Aigle et le Roitelet",
+        default=True,
+    )
+    revasion: bpy.props.BoolProperty(
+        name="Révasion",
+        default=True,
+    )
+    custom: bpy.props.BoolProperty(
+        name="Custom",
+        default=True,
+    )
+ 
+
+
+    def draw(self, context):
+        layout = self.layout
+        column = layout.column()
+        
+        column.prop(self, 'aigle', expand=True)
+        column.prop(self, 'revasion', expand=True)
+        column.prop(self, 'custom', expand=True)
+
+
+
+submodules = [grease_pencil_tools, pipeline, aigle, custom, revasion, ui_global]
+
+# @persistent
+# def update_stroke(dummy):    
+#     if bpy.context.mode in {'PAINT_GPENCIL'}:
+#         #print(bpy.context.object.type)
+#         stroke = bpy.context.active_object.data.layers.active.active_frame.strokes[-1]                     
 
 
 #REGISTER UNREGISTER
-classes = ()
+classes = (ENCLUME_Preferences,)
 
 def register():
     for submdule in submodules:
