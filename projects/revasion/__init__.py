@@ -34,26 +34,21 @@ class UI_PT_view3d_enclume_revasion(bpy.types.Panel):
         layout = self.layout
         layout.use_property_split = True    
         
-        #NIJIGP TOOLS
-        layout.label(text = "Test" ) 
-        row = layout.row()
         layout.label(text = "File Manager" ) 
         op = layout.operator("pipeline.open")
         project_settings = "R:\enclume\Revasion.json"
         op.project_settings = project_settings
 
-        row.operator("revasion.setup_scene")
-        # row.operator("gpencil.nijigp_bool_selected", text="-", icon="SELECT_SUBTRACT").operation_type = 'DIFFERENCE'
-        # row.operator("gpencil.nijigp_bool_selected", text="×", icon="SELECT_INTERSECT").operation_type = 'INTERSECTION'
+        layout.operator("pipeline.version")
+        layout.label(text = "Scene Manager" ) 
+        layout.operator("revasion.setup_scene")
 
-        #GPTOOLBOX
-        layout.label(text = "Test2" ) 
-        col = layout.column()
 
-class REVASION_OT_aigle_setup_scene(bpy.types.Operator):    
+class REVASION_OT_setup_scene(bpy.types.Operator):    
     bl_idname = "revasion.setup_scene"
     bl_label = "Scene Setup"
     bl_description = ""
+    bl_options = {"REGISTER", "UNDO"}
 
 
     def execute(self, context):               
@@ -98,7 +93,7 @@ class REVASION_OT_aigle_setup_scene(bpy.types.Operator):
 #REGISTER
 classes = (
     UI_PT_view3d_enclume_revasion,
-    REVASION_OT_aigle_setup_scene,
+    REVASION_OT_setup_scene,
     )
 
 def register():    

@@ -44,21 +44,29 @@ from .projects import aigle, custom, revasion
 
 from bpy.app.handlers import persistent
 
+
+active_projects = [revasion]
+
+all_projects = [aigle, custom, revasion]
+
+submodules = [grease_pencil_tools, pipeline, ui_global] + active_projects
+
+
 class ENCLUME_Preferences(bpy.types.AddonPreferences):
     bl_idname = __package__
 
-    aigle: bpy.props.BoolProperty(
-        name="L'Aigle et le Roitelet",
-        default=True,
-    )
-    revasion: bpy.props.BoolProperty(
-        name="Révasion",
-        default=True,
-    )
-    custom: bpy.props.BoolProperty(
-        name="Custom",
-        default=True,
-    )
+    # aigle: bpy.props.BoolProperty(
+    #     name="L'Aigle et le Roitelet",
+    #     default=True,
+    # )
+    # revasion: bpy.props.BoolProperty(
+    #     name="Révasion",
+    #     default=True,
+    # )
+    # custom: bpy.props.BoolProperty(
+    #     name="Custom",
+    #     default=True,
+    # )
  
 
 
@@ -66,13 +74,13 @@ class ENCLUME_Preferences(bpy.types.AddonPreferences):
         layout = self.layout
         column = layout.column()
         
-        column.prop(self, 'aigle', expand=True)
-        column.prop(self, 'revasion', expand=True)
-        column.prop(self, 'custom', expand=True)
+        # column.prop(self, 'aigle', expand=True)
+        # column.prop(self, 'revasion', expand=True)
+        # column.prop(self, 'custom', expand=True)
 
 
 
-submodules = [grease_pencil_tools, pipeline, aigle, custom, revasion, ui_global]
+
 
 # @persistent
 # def update_stroke(dummy):    
@@ -85,11 +93,13 @@ submodules = [grease_pencil_tools, pipeline, aigle, custom, revasion, ui_global]
 classes = (ENCLUME_Preferences,)
 
 def register():
+    for cls in classes:
+        register_class(cls)
+
     for submdule in submodules:
         submdule.register()
 
-    for cls in classes:
-        register_class(cls)
+
 
     # bpy.app.handlers.depsgraph_update_post.append(update_stroke)
 
