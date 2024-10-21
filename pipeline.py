@@ -271,35 +271,9 @@ def enum_shots(self, sequence, context):
 
     return _enum_shots
 
-class PIPELINE_OT_open(bpy.types.Operator):    
-    bl_idname = "pipeline.open"
-    bl_label = "Open/Create File"
-    bl_description = "Open File"
+class PIPELINE_OT_base():
 
     project_settings: bpy.props.StringProperty (default='', subtype="FILE_PATH")
-    
-    # def enum_tasks(self, context):
-    #     _enum_tasks = []
-    #     _enum_tasks.clear()
-    #     _enum_tasks.append(("Layout", "Layout", ""))
-    #     _enum_tasks.append(("Clean", "Clean", ""))
-
-    #     return _enum_tasks
-
-    ui: bpy.props.BoolProperty(
-        name="Load UI",
-        default=True,
-        )
-    
-    create: bpy.props.BoolProperty(
-        name="Create New File",
-        default=False,
-        )
-    
-    blank: bpy.props.BoolProperty(
-        name="Create from Blank",
-        default=False,
-        )
     
     task: bpy.props.EnumProperty(
         name="Task",
@@ -317,8 +291,29 @@ class PIPELINE_OT_open(bpy.types.Operator):
         name="Shot",
         default=0,
         items = lambda self, context: enum_shots(self, self.sequence, context),
-        )
+        )  
     
+    def invoke(self, context, event):
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self)
+    
+
+    def extract_version(self, file_name):
+        match = re.search(r'v(\d{3})', file_name)  # Cherche un motif 'v000', 'v001', etc.
+        if match:
+            return int(match.group(1))  # Retourne le numéro de version sous forme d'entier
+        return -1
+    
+class PIPELINE_OT_open(bpy.types.Operator, PIPELINE_OT_base):    
+    bl_idname = "pipeline.open"
+    bl_label = "Open File"
+    bl_description = "Open File"
+
+    ui: bpy.props.BoolProperty(
+        name="Load UI",
+        default=True,
+        )   
+  
     def execute(self, context):
         with open(self.project_settings, 'r') as f:
             data = json.load(f)
@@ -343,15 +338,49 @@ class PIPELINE_OT_open(bpy.types.Operator):
             self.report({'INFO'}, "File {} opened".format(latest_file))
 
         else:
-            if self.create:
-                filename = basename + "v000.blend"
-                filepath = os.path.join(directory, filename)
-                if self.blank:
-                    bpy.ops.wm.read_homefile(app_template="")
-                bpy.ops.wm.save_as_mainfile( filepath = filepath, check_existing=True, relative_remap = True)
-                self.report({'INFO'}, "File {} created".format(filename))
-            else:
-                self.report({'ERROR'}, "No existing file")
+            self.report({'ERROR'}, "No existing file")
+
+
+        return {'FINISHED'}
+    
+class PIPELINE_OT_create(bpy.types.Operator, PIPELINE_OT_base):    
+    bl_idname = "pipeline.create"
+    bl_label = "Create File"
+    bl_description = "Create File"
+
+    blank: bpy.props.BoolProperty(
+        name="Create from Blank",
+        default=False,
+        )
+    
+    def execute(self, context):
+        with open(self.project_settings, 'r') as f:
+            data = json.load(f)
+
+        # OPENER AIGLE
+        # #TODO : Ce serait bien de renseigner le style de structure dans le fichier project settings
+        # task_sequence = self.task + "_" + self.shot.split("_")[0]
+        # task_shot = self.task + "_" + self.shot
+        # task_file = self.task + "_" + self.shot + ".blend"
+        # filepath = os.path.join(data["path"], self.task, task_sequence, task_shot, task_file)
+
+
+        directory = os.path.join(data["path"], "sequences", self.sequence, self.shot, self.task)
+        basename = "lgr_" + self.sequence + "_" + self.shot + "_" + self.task + "_"
+
+        filtered_files = [f for f in os.listdir(directory) if basename in f and f.endswith('.blend')]
+
+        if filtered_files:
+            latest_file = max(filtered_files, key=self.extract_version)
+            self.report({'ERROR'}, "File {} already exist".format(latest_file))
+
+        else:
+            filename = basename + "v000.blend"
+            filepath = os.path.join(directory, filename)
+            if self.blank:
+                bpy.ops.wm.read_homefile(app_template="")
+            bpy.ops.wm.save_as_mainfile( filepath = filepath, check_existing=True, relative_remap = True)
+            self.report({'INFO'}, "File {} created".format(filename))
 
 
         return {'FINISHED'}
@@ -366,6 +395,8 @@ class PIPELINE_OT_open(bpy.types.Operator):
         if match:
             return int(match.group(1))  # Retourne le numéro de version sous forme d'entier
         return -1
+    
+    
 
 #REGISTER
 classes = (
@@ -373,6 +404,7 @@ classes = (
     PIPELINE_OT_import_audio,
     PIPELINE_OT_playblast,
     PIPELINE_OT_open,
+    PIPELINE_OT_create,
     PIPELINE_OT_version,
     )
 
