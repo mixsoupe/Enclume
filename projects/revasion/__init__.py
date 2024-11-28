@@ -45,6 +45,8 @@ class UI_PT_view3d_enclume_revasion(bpy.types.Panel):
         layout.operator("pipeline.version")
         layout.label(text = "Scene Manager" ) 
         layout.operator("revasion.setup_scene")
+        layout.operator("revasion.import_animatic")
+        
 
 
 class REVASION_OT_setup_scene(bpy.types.Operator):    
@@ -62,11 +64,6 @@ class REVASION_OT_setup_scene(bpy.types.Operator):
         for parent in bpy.data.collections:
             if  obj.name in parent.objects:
                 parent.objects.unlink(obj) 
-
-    def version_extract(self, filename):
-        version_pattern = r'_v(\d{3})'
-        match = re.search(version_pattern, filename)
-        return int(match.group(1)) if match else -1
 
     def execute(self, context):
         if not bpy.data.is_saved:
@@ -131,8 +128,28 @@ class REVASION_OT_setup_scene(bpy.types.Operator):
 
         self.unlinkObj(camera)
         if camera.name not in cameras.objects:
-            cameras.objects.link(camera)
+            cameras.objects.link(camera)   
 
+        return {'FINISHED'}
+
+class REVASION_OT_import_animatic(bpy.types.Operator):    
+    bl_idname = "revasion.import_animatic"
+    bl_label = "Import Animatic"
+    bl_description = "Import Animatic"
+
+    def version_extract(self, filename):
+        version_pattern = r'_v(\d{3})'
+        match = re.search(version_pattern, filename)
+        return int(match.group(1)) if match else -1
+
+    def execute(self, context):
+        if not bpy.data.is_saved:
+            self.report({'ERROR'}, 'Save file before setup scene')
+            return {'CANCELLED'}  
+           
+        camera = context.scene.camera
+
+        filepath = bpy.context.blend_data.filepath
         animatic_folder = os.path.dirname(filepath.replace('layout', 'animatic'))
         animatic_files = []
         for file in os.listdir(animatic_folder):
@@ -150,58 +167,60 @@ class REVASION_OT_setup_scene(bpy.types.Operator):
         if most_recent_file:
             animatic_path = os.path.join(animatic_folder, most_recent_file)
         else:
-            animatic_path = None
-
-        print (animatic_path)
-            
-
-        ###DISABLE BECAUSE FRAMERATE PROBLEM
-        # camera.data.show_background_images = True
+            self.report({'ERROR'}, 'There is no animatic file')
+            return {'CANCELLED'}  
         
-        # if camera.data.background_images:
-        #     camera.data.background_images.clear()
+        ##DISABLE BECAUSE FRAMERATE PROBLEM
+        camera.data.show_background_images = True
         
-        # bg_image = camera.data.background_images.new()
-        # bg_image.source = 'MOVIE_CLIP'
-        # path ="R:/sequences/sq010/sh0010/animatic/lgr_sq010_sh0010_animatic_v001.mov"
-        # movie_clip = bpy.data.movieclips.load(path)
-        # movie_clip.frame_offset = -99 #CHECK
-        # bg_image.clip = movie_clip
+        if camera.data.background_images:
+            camera.data.background_images.clear()
+        
+        bg_image = camera.data.background_images.new()
+        bg_image.source = 'MOVIE_CLIP'
+        movie_clip = bpy.data.movieclips.load(animatic_path)
+        movie_clip.frame_offset = -99 #CHECK
+        bg_image.clip = movie_clip
 
-        # bg_image.display_depth = 'FRONT'
+        bg_image.display_depth = 'FRONT'
 
-        # if context.scene.sequence_editor is None:
-        #     context.sequence_editor_create()
+        if context.scene.sequence_editor is None:
+            context.sequence_editor_create()
 
-        # for sequence in context.scene.sequence_editor.sequences:
-        #     context.scene.sequence_editor.sequences.remove(sequence)
+        for sequence in context.scene.sequence_editor.sequences:
+            context.scene.sequence_editor.sequences.remove(sequence)
 
-        # sequencer_strip = context.scene.sequence_editor.sequences.new_movie(
-        #     name="Movie Clip",
-        #     filepath=path,
-        #     channel=2,
-        #     frame_start=100
-        # )
-        # audio_strip = context.scene.sequence_editor.sequences.new_sound(
-        #     name="Movie Audio",
-        #     filepath=path,
-        #     channel=1,
-        #     frame_start=100 
-        # )
-        # sequencer_strip.frame_start = 100
-        # sequencer_strip.frame_final_duration = movie_clip.frame_duration
-        # audio_strip.frame_start = 100
-        # audio_strip.frame_final_duration = movie_clip.frame_duration 
+        sequencer_strip = context.scene.sequence_editor.sequences.new_movie(
+            name="Movie Clip",
+            filepath=animatic_path,
+            channel=2,
+            frame_start=100
+        )
+        audio_strip = context.scene.sequence_editor.sequences.new_sound(
+            name="Movie Audio",
+            filepath=animatic_path,
+            channel=1,
+            frame_start=100 
+        )
+        sequencer_strip.frame_start = 100
+        sequencer_strip.frame_final_duration = movie_clip.frame_duration
+        audio_strip.frame_start = 100
+        audio_strip.frame_final_duration = movie_clip.frame_duration
 
-        #bpy.ops.outliner.orphans_purge(do_local_ids=True, do_linked_ids=True, do_recursive=True)
+        context.scene.frame_start = 100
+        context.scene.frame_end = 100 + movie_clip.frame_duration - 1
 
+        bpy.ops.outliner.orphans_purge(do_local_ids=True, do_linked_ids=True, do_recursive=True)
+        
+        self.report({'INFO'}, "Animatic imported")
         return {'FINISHED'}
-
+    
 
 #REGISTER
 classes = (
     UI_PT_view3d_enclume_revasion,
     REVASION_OT_setup_scene,
+    REVASION_OT_import_animatic,
     )
 
 def register():    
