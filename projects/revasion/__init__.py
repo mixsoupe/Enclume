@@ -32,20 +32,29 @@ class UI_PT_view3d_enclume_revasion(bpy.types.Panel):
     bl_category = "L'Enclume"
 
     def draw(self, context):
+        project_settings = "R:\enclume\Revasion.json"
+
         layout = self.layout
         layout.use_property_split = True    
         
         layout.label(text = "File Manager" ) 
         open = layout.operator("pipeline.open")
-        create = layout.operator("pipeline.create")
-        project_settings = "R:\enclume\Revasion.json"
+        create = layout.operator("pipeline.create")        
         open.project_settings = project_settings
         create.project_settings = project_settings
-
         layout.operator("pipeline.version")
+
         layout.label(text = "Scene Manager" ) 
         layout.operator("revasion.setup_scene")
         layout.operator("revasion.import_animatic")
+        layout.operator("pipeline.make_override")
+        # link = layout.operator("pipeline.link_asset")
+        # link.project_settings = project_settings
+
+        layout.label(text = "Export" ) 
+        op = layout.operator("pipeline.playblast") 
+        currentFile = bpy.data.filepath
+        op.playblastFile = currentFile.replace (".blend", ".mp4")
         
 
 
@@ -216,11 +225,14 @@ class REVASION_OT_import_animatic(bpy.types.Operator):
         return {'FINISHED'}
     
 
+       
+
+
 #REGISTER
 classes = (
     UI_PT_view3d_enclume_revasion,
     REVASION_OT_setup_scene,
-    REVASION_OT_import_animatic,
+    REVASION_OT_import_animatic,        
     )
 
 def register():    

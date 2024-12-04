@@ -219,8 +219,7 @@ class PIPELINE_OT_playblast(bpy.types.Operator):
                                 space.shading.type = 'MATERIAL'                                
 
         bpy.context.space_data.region_3d.view_perspective = 'CAMERA'
-
-
+        
 
         filename =  bpy.path.basename(self.playblastFile)
         filename = filename.rsplit(".", 1)[0]        
@@ -270,6 +269,16 @@ def enum_shots(self, sequence, context):
         _enum_shots.append((shot, shot, ""))
 
     return _enum_shots
+
+def enum_assets(self, context):
+    _enum_assets = []
+    
+    with open(self.project_settings, 'r') as f:
+        data = json.load(f)
+    for asset in data["assets"]:
+        _enum_assets.append((asset, asset, ""))
+
+    return _enum_assets
 
 class PIPELINE_OT_base():
 
@@ -396,7 +405,137 @@ class PIPELINE_OT_create(bpy.types.Operator, PIPELINE_OT_base):
             return int(match.group(1))  # Retourne le numéro de version sous forme d'entier
         return -1
     
+class AssetItem(bpy.types.PropertyGroup):
+    name: bpy.props.StringProperty(name="Asset Name")
+    is_selected: bpy.props.BoolProperty(name="Select", default=False)
+
+class PIPELINE_OT_link_asset(bpy.types.Operator):    
+    bl_idname = "pipeline.link_asset"
+    bl_label = "Link Asset"
+    bl_description = "Link asset"
+    bl_options = {"REGISTER", "UNDO"}    
     
+    project_settings: bpy.props.StringProperty (default='', subtype="FILE_PATH")
+    
+    assets: bpy.props.EnumProperty(
+        name="Asset",
+        default=0,
+        items = lambda self, context: enum_assets(self, context),
+        )
+    
+    def invoke(self, context, event):
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self)
+
+
+    def execute(self, context):
+        print (self.asset)
+        return {'FINISHED'}
+
+    # def draw(self, context):
+    #     layout = self.layout
+    #     col = layout.column()
+
+    #     # Afficher chaque item de la liste avec une case à cocher
+    #     for i, asset in enumerate(self.assets):
+    #         row = col.row()
+    #         row.prop(asset, "is_selected", text="")
+    #         row.label(text=asset.name)
+
+    # def execute(self, context):
+    #     # Récupérer les assets sélectionnés
+    #     selected_assets = [asset.name for asset in self.assets if asset.is_selected]
+
+    #     if not selected_assets:
+    #         self.report({'WARNING'}, "Aucun asset sélectionné")
+    #         return {'CANCELLED'}
+
+    #     # Importer les assets sélectionnés
+    #     for asset_path in selected_assets:
+    #         print (asset_path)
+        
+    #     self.report({'INFO'}, f"{len(selected_assets)} assets importés")
+    #     return {'FINISHED'}
+
+class PIPELINE_OT_make_override(bpy.types.Operator):    
+    bl_idname = "pipeline.make_override"
+    bl_label = "Make Override"
+    bl_description = "Make Override"
+    bl_options = {"REGISTER", "UNDO"}    
+    
+    keep: bpy.props.BoolProperty(name="Keep Position", default=True)
+
+    def execute(self, context):
+        main_bone = "pose" 
+        assets = []
+        for obj in bpy.context.selected_objects:
+            if obj.type == "EMPTY":
+                if obj.instance_type == "COLLECTION":
+                    o = bpy.data.objects.new( "empty", None )
+                    bpy.context.scene.collection.objects.link(o)
+                    o.location = obj.location
+                    o.rotation_euler = obj.rotation_euler
+                    o.scale = obj.scale
+
+                    collection = bpy.data.collections.new(obj.name)
+                    name = collection.name
+                    bpy.data.collections.remove(collection)
+
+                    with bpy.context.temp_override(active_object=obj):
+                        bpy.ops.object.make_override_library()
+
+                    if self.keep:
+                        for child in bpy.data.collections[name].all_objects:
+                            if child.type == "ARMATURE":
+                                main = child.pose.bones[main_bone]
+
+                                main.location = o.location
+                                main.rotation_euler = o.rotation_euler
+                                main.scale = o.scale
+
+                    bpy.data.objects.remove(o, do_unlink=True)
+                    assets.append(name)
+        if assets:
+            self.report({'INFO'}, "{} overrided".format(assets))
+            return {'FINISHED'}
+        else:
+            self.report({'WARNING'}, "Nothing to override")
+            return {'CANCELLED'}
+    
+    def invoke(self, context, event):
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self)
+
+                        
+
+
+                
+
+        
+    
+
+def create_library_override(library_collection):
+    # Vérifiez que l'objet ou la collection a une bibliothèque liée
+    if not library_collection.library:
+        raise ValueError(f"La collection {library_collection.name} n'est pas liée à une bibliothèque.")
+    
+    # Créez une override de bibliothèque à l'aide de l'API low-level
+    library_override_collection = bpy.data.collections.new(name=f"{library_collection.name}_override")
+    bpy.context.scene.collection.children.link(library_override_collection)
+    
+    # Remplir la collection override avec des overrides des objets de la collection source
+    for obj in library_collection.objects:
+        # Créez une copie de l'objet avec un override
+        override_obj = obj.override_create()
+        library_override_collection.objects.link(override_obj)
+    
+    # Optionnel : copier les sous-collections si nécessaire
+    for sub_collection in library_collection.children:
+        override_sub_collection = create_library_override(sub_collection)
+        library_override_collection.children.link(override_sub_collection)
+    
+    return library_override_collection
+
 
 #REGISTER
 classes = (
@@ -406,6 +545,8 @@ classes = (
     PIPELINE_OT_open,
     PIPELINE_OT_create,
     PIPELINE_OT_version,
+    #PIPELINE_OT_link_asset,
+    PIPELINE_OT_make_override,
     )
 
 def register():    
