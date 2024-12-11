@@ -25,7 +25,6 @@ import re
 from bpy.utils import register_class, unregister_class
 from pathlib import Path
 
-
 class PIPELINE_OT_increment(bpy.types.Operator):    
     bl_idname = "pipeline.increment"
     bl_label = "Increment Save"
@@ -180,52 +179,49 @@ class PIPELINE_OT_playblast(bpy.types.Operator):
         scene.render.filepath = self.playblastFile
 
         #Metadata
-        scene.render.use_stamp_date = False
-        scene.render.use_stamp_time = False
-        scene.render.use_stamp_render_time = False
-        scene.render.use_stamp_frame = True
-        scene.render.use_stamp_frame_range = False
-        scene.render.use_stamp_memory = False
-        scene.render.use_stamp_hostname = False
-        scene.render.use_stamp_camera = False
-        scene.render.use_stamp_lens = False
-        scene.render.use_stamp_scene = False
-        scene.render.use_stamp_marker = False
-        scene.render.use_stamp_filename = False
-        scene.render.use_stamp_note = True
-        scene.render.use_stamp = True
+        # scene.render.use_stamp_date = False
+        # scene.render.use_stamp_time = False
+        # scene.render.use_stamp_render_time = False
+        # scene.render.use_stamp_frame = True
+        # scene.render.use_stamp_frame_range = False
+        # scene.render.use_stamp_memory = False
+        # scene.render.use_stamp_hostname = False
+        # scene.render.use_stamp_camera = False
+        # scene.render.use_stamp_lens = False
+        # scene.render.use_stamp_scene = False
+        # scene.render.use_stamp_marker = False
+        # scene.render.use_stamp_filename = False
+        # scene.render.use_stamp_note = True
+        scene.render.use_stamp = False
 
         #Render
         # Check range
-        sound_count = 0
         for sequence in scene.sequence_editor.sequences:            
             if sequence.type == 'SOUND':
-                sound_count += 1
-        if sound_count == 1:
-            scene.frame_start = 1
-            scene.frame_end = sequence.frame_final_duration
+                scene.frame_start = int(sequence.frame_start)
+                scene.frame_end = int(sequence.frame_start + sequence.frame_final_duration - 1)
+
+            
 
         #settings = {}
         for screen in bpy.data.screens:
             for area in screen.areas:
                     if area.type == 'VIEW_3D':
                         for space in area.spaces:
-                            if space.type == 'VIEW_3D':
-                                # space_settings = {"overlays" : space.overlay.show_overlays,
-                                #                   "shading.type" : space.shading.type
-                                #                   }
-                                # settings[space] = space_settings
+                            if space.type == 'VIEW_3D':                       
                                 space.overlay.show_overlays = False    
-                                space.shading.type = 'MATERIAL'                                
+                                space.shading.type = 'MATERIAL'                          
 
         bpy.context.space_data.region_3d.view_perspective = 'CAMERA'
         
 
         filename =  bpy.path.basename(self.playblastFile)
         filename = filename.rsplit(".", 1)[0]        
-        scene.render.stamp_note_text = filename
+        scene.render.stamp_note_text = filename        
+        
+        bpy.ops.render.opengl('INVOKE_DEFAULT', animation = True)   
 
-        bpy.ops.render.opengl('INVOKE_DEFAULT', animation = True)     
+        # bpy.app.timers.register(check_opengl_render_status)  
         
         # #Restore Settings
         # for space in settings.keys():
@@ -237,7 +233,21 @@ class PIPELINE_OT_playblast(bpy.types.Operator):
         os.startfile(folder)
 
         return {'FINISHED'}
+    
+# def check_opengl_render_status():
 
+#     # Vérifie si Blender est en train de rendre
+#     if bpy.context.scene.frame_current == bpy.context.scene.frame_end:
+#         for screen in bpy.data.screens:
+#             for area in screen.areas:
+#                     if area.type == 'VIEW_3D':
+#                         for space in area.spaces:
+#                             if space.type == 'VIEW_3D':                       
+#                                 space.overlay.show_overlays = True    
+#                                 space.shading.type = 'MATERIAL'                        
+
+#         return None
+#     return 0.1
 
 
 def enum_tasks(self, context):

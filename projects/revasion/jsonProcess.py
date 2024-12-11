@@ -4,7 +4,7 @@ import json
 csv_path = "R:/enclume/shots.csv"
 json_path = "R:/enclume/Revasion_temp.json"
 
-bkl = {"path": "R://", "task":["LAYOUT", "ANIM"], "sequences":{}}
+bkl = {"path": "R://", "task":["layout", "anim"], "sequences":{}}
 
 
 last_seq = "sq010"
