@@ -481,11 +481,11 @@ class PIPELINE_OT_make_override(bpy.types.Operator):
         for obj in bpy.context.selected_objects:
             if obj.type == "EMPTY":
                 if obj.instance_type == "COLLECTION":
-                    o = bpy.data.objects.new( "empty", None )
-                    bpy.context.scene.collection.objects.link(o)
-                    o.location = obj.location
-                    o.rotation_euler = obj.rotation_euler
-                    o.scale = obj.scale
+                    tempEmpty = bpy.data.objects.new( "empty", None )
+                    bpy.context.scene.collection.objects.link(tempEmpty)
+                    tempEmpty.location = obj.location
+                    tempEmpty.rotation_euler = obj.rotation_euler
+                    tempEmpty.scale = obj.scale
 
                     collection = bpy.data.collections.new(obj.name)
                     name = collection.name
@@ -499,11 +499,11 @@ class PIPELINE_OT_make_override(bpy.types.Operator):
                             if child.type == "ARMATURE":
                                 main = child.pose.bones[main_bone]
 
-                                main.location = o.location
-                                main.rotation_euler = o.rotation_euler
-                                main.scale = o.scale
+                                main.location = tempEmpty.location
+                                main.rotation_euler = tempEmpty.rotation_euler
+                                main.scale = tempEmpty.scale
 
-                    bpy.data.objects.remove(o, do_unlink=True)
+                    bpy.data.objects.remove(tempEmpty, do_unlink=True)
                     assets.append(name)
         if assets:
             self.report({'INFO'}, "{} overrided".format(assets))
