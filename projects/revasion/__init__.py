@@ -22,6 +22,7 @@ import os
 import re
 from bpy.utils import register_class, unregister_class
 import addon_utils
+from math import radians
 
 #VIEW3D PANELS
 class UI_PT_view3d_enclume_revasion(bpy.types.Panel):
@@ -73,6 +74,8 @@ class REVASION_OT_setup_scene(bpy.types.Operator):
         for parent in bpy.data.collections:
             if  obj.name in parent.objects:
                 parent.objects.unlink(obj) 
+        if obj.name in bpy.context.scene.collection.objects:
+            bpy.context.scene.collection.objects.unlink(obj)
 
     def execute(self, context):
         if not bpy.data.is_saved:
@@ -90,8 +93,18 @@ class REVASION_OT_setup_scene(bpy.types.Operator):
         context.scene.view_settings.view_transform = "Standard"
         context.preferences.filepaths.use_relative_paths = True
         context.preferences.filepaths.use_file_compression = True
+
+        # context.scene.render.use_simplify = True
+        context.scene.render.simplify_subdivision = 0
         
-        camera = context.scene.camera
+        if context.scene.camera is None:
+            camera_data = bpy.data.cameras.new(name='Camera')
+            camera = bpy.data.objects.new('Camera', camera_data)
+            bpy.context.scene.collection.objects.link(camera)
+            camera.location = (0,-10,0)
+            camera.rotation_euler = (radians(90.0),0,0)
+        else:
+            camera = context.scene.camera
         camera.name = '_'.join(("camera", shotName))
         camera.data.lens = 35
         camera.data.passepartout_alpha = 0.99
@@ -137,7 +150,16 @@ class REVASION_OT_setup_scene(bpy.types.Operator):
 
         self.unlinkObj(camera)
         if camera.name not in cameras.objects:
-            cameras.objects.link(camera)   
+            cameras.objects.link(camera)
+
+        for screen in bpy.data.screens:
+            for area in screen.areas:
+                    if area.type == 'VIEW_3D':
+                        for space in area.spaces:
+                            if space.type == 'VIEW_3D':                       
+                                space.overlay.show_overlays = True
+                                space.overlay.show_relationship_lines = False   
+                                  
 
         return {'FINISHED'}
 
